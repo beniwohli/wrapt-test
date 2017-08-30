@@ -1,7 +1,7 @@
 language: python
-python:
-  - "3.5"
-  - "3.6"
+#python:
+#  - "3.5"
+#  - "3.6"
 env:
   global:
     - COVERAGE_CMD="coverage run -m"
@@ -13,3 +13,31 @@ script:
 after_script:
   - coverage combine
   - coveralls
+
+jobs:
+  include:
+    - stage: Build
+      python: 3.4
+      sudo: required
+      services:
+        - docker
+      script: pip install cibuildwheel==0.4.1 && cibuildwheel --output-dir wheelhouse
+      env:
+        - CIBW_TEST_COMMAND="pip install pytest && cd /project/tests && py.test -v"
+      after_script:
+    - os: osx
+      language: C  # Travis doesn't support Python builds, so let's lie a bit
+      script: pip install cibuildwheel==0.4.1 && cibuildwheel --output-dir wheelhouse
+
+deploy:
+  provider: s3
+  access_key_id: AKIAJUJH7L7N6BEULNMQ
+  secret_access_key:
+     secure: "q2+dH0CbQoqua6WXhCrCfhchYpt+XKZWMXEQfOlO8y7hSklyXKbhJjjy4t4w41WmT5sG6eUdfEBXwAYV67sU7odslnspeyOLiyvVc6c2oC2T9VeDTd/Aj33k6EwVCX2wMNJdqt9Y3jTscy36IlCY4KUtFFUgND+j84AVBw6u9ekdd5SOKoEkcbLiKU8+RXzunXy7ISnV29XB0gyAMPoF2P4/XQLVgVE724CLNeQAgUSFroyRm5yaKlwHibndFzAN2Ph1yPxoQK7h824QAkX3z+heZTrDjodYmZWGIxgwLyyDufQ18Y2I7I+j5Il2wVguGniXrdj6G47HkGAO+PfBwUWM0GbLcbahz0XnMScsfAzjf0AsRlKglJ7heqKrC0vrLR4TWqzX7TRMddTpWSov/B1k9RtzVH1KcR48N3oJVGRZQfXcJf89Rc85a3WUM0MinZ8ZWZtAUoQkaWGbSh4Mz41tvi1HNQJRdxkiQ1u/3LRnAHiXqIHJEQpMcRAeq2NmEYHiHo/mFwHuFEQIQr3RDU+OLu23rMAhyDsIUCVeg4GBseSsq4RiOuUlWZcV1Ex5RAM543ymlFzZ0WsOKJE9GrLM3X558OMOJj4lLNIRzCildOzAhugxxgpfMz7smgFXQ5NFKflTC9WO/2oMFXsN81mKKvEpfnKSKNBiLWzFdQE="
+  bucket: wrapt-test
+  skip_cleanup: true
+  local_dir: wheelhouse
+  acl: public_read
+  on:
+    repo: beniwohli/wrapt-test
+    tags: true
