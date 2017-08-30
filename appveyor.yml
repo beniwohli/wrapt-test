@@ -9,3 +9,22 @@ build: off
 
 test_script:
   - ps: C:\Python35-x64\python.exe -m tox --skip-missing-interpreters
+  - ps: if (Test-Path env:APPVEYOR_REPO_TAG) {pip install cibuildwheel==0.4.1}
+  - ps: if (Test-Path env:APPVEYOR_REPO_TAG) {cibuildwheel --output-dir wheelhouse 2>&1 | %{ "$_" }}
+
+artifacts:
+  - path: "wheelhouse\\*.whl"
+    name: Wheels
+
+deploy:
+  provider: S3
+  access_key_id: AKIAJUJH7L7N6BEULNMQ
+  secret_access_key:
+    secure: "+6QiAXzu7TJXy6zeIdv+gSLD7jLoQiMSw8rpvt6VrQt6tWHTxvv89sQQ81tTUUpo"
+  bucket: wrapt-test
+  region: us-east-1
+  unzip: false
+  set_public: true
+  artifact: Wheels
+  on:
+    appveyor_repo_tag: true
