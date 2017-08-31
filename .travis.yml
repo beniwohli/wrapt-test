@@ -21,13 +21,18 @@ jobs:
       sudo: required
       services:
         - docker
-      script: pip install cibuildwheel==0.4.1 && cibuildwheel --output-dir wheelhouse
+      script: pip install cibuildwheel==0.4.1 && mkdir -p wheelhouse/${TRAVIS_TAG} && cibuildwheel --output-dir wheelhouse/${TRAVIS_TAG}
       env:
-        - CIBW_TEST_COMMAND="pip install pytest && cd /project/tests && py.test -v"
+        - CIBW_TEST_REQUIRES=pytest
+        - CIBW_TEST_COMMAND="py.test -v {project}/tests"
       after_script:
     - os: osx
-      language: C  # Travis doesn't support Python builds, so let's lie a bit
-      script: pip install cibuildwheel==0.4.1 && cibuildwheel --output-dir wheelhouse
+      language: c  # Travis doesn't support Python builds, so let's lie a bit
+      script: pip install cibuildwheel==0.4.1 && mkdir -p wheelhouse/${TRAVIS_TAG} && cibuildwheel --output-dir wheelhouse/${TRAVIS_TAG}
+      env:
+        - CIBW_TEST_REQUIRES=pytest
+        - CIBW_TEST_COMMAND="py.test -v {project}/tests"
+      after_script:
 
 deploy:
   provider: s3
